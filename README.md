@@ -56,7 +56,7 @@ Historical Validation Mode uses:
 - Actual historical FRED WTI crude oil prices, series `DCOILWTICO`
 - Actual historical FRED Brent crude oil prices, series `DCOILBRENTEU`
 - Date range: `2020-01-01` through `2025-12-31`
-- User-provided verified event file: `data/raw/verified_events.csv`
+- Included curated verified historical event file: `data/raw/verified_events.csv`
 
 This mode examines event-window price reactions around verified historical oil-market events. It does not claim causality, trading signal validity, predictive power, or investment advice.
 
@@ -68,12 +68,14 @@ Historical Validation Mode does not silently replace failed FRED historical load
 - FRED daily Brent crude oil price series: `DCOILBRENTEU`
 - Sample price file: `data/raw/sample_prices.csv`
 - Sample event file: `data/raw/events_sample.csv`
-- User-provided verified historical event file: `data/raw/verified_events.csv`
+- Included curated verified historical event file: `data/raw/verified_events.csv`
 
-## Verified Event File Requirements
+## Verified Event File
 
-Create `data/raw/verified_events.csv` with these columns:
+The project includes a curated verified historical oil-market event dataset at:
+`data/raw/verified_events.csv`
 
+The file uses these columns:
 ```text
 event_id
 event_date
@@ -86,15 +88,14 @@ event_summary
 notes
 ```
 
-Rules:
+Rules used for the verified event dataset:
 
-- Do not invent events.
-- Do not invent fake URLs.
-- Keep missing `source_url` values blank.
+- Events should be supported by real source URLs.
+- Fake events and fake URLs should not be included.
 - Rows with a nonblank `source_url` are flagged as `source_url_present = True`.
 - Rows with a blank `source_url` are flagged as `source_url_present = False`.
 - This flag means a source URL was provided; it does not independently verify source quality.
-- Historical validation quality depends on the completeness and accuracy of this user-provided file.
+- Historical validation quality depends on the completeness and accuracy of the curated event file.
 
 ## Key Features
 
@@ -200,48 +201,49 @@ oil-market-intelligence-dashboard/
 |-- assets/
 ```
 
-`verified_events.csv`, `fred_prices_2020_2025.csv`, and `event_window_results.csv` may not exist until the user provides verified events and runs historical validation.
+The repository includes processed historical validation files. These files can be regenerated if `verified_events.csv` is updated.
 
 ## How to Run Locally
 
-Run these commands from Windows PowerShell in the project folder:
+Run these commands from Windows PowerShell after cloning or downloading the repository:
 
 ```powershell
-cd "C:\Users\qlz88\OneDrive\Documents\AI-Assisted Oil Market Intelligence Dashboard"
+cd path\to\oil-market-dashboard
 ```
 
 1. Create and activate a virtual environment.
 
 ```powershell
-python -m venv .venv
-.venv\Scripts\activate
+py -m venv .venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
 ```
 
 2. Install dependencies.
 
 ```powershell
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 ```
 
 3. Run the dashboard.
 
 ```powershell
-streamlit run app.py
+py -m streamlit run app.py
 ```
 
 4. Open the local Streamlit URL shown in the terminal, usually `http://localhost:8501`.
 
 ## How to Use Sample Demo Scenario Mode
 
-1. Run `streamlit run app.py`.
+1. Run `py -m streamlit run app.py`.
 2. In the sidebar, set Data Mode to `Sample Demo Scenario`.
 3. Use the Executive Monitor, Price Trends, Event Intelligence, AI Daily Brief, and Methodology pages.
 4. Treat all sample prices and sample events as portfolio demo data only.
 
 ## How to Use Historical Validation Mode
 
-1. Create `data/raw/verified_events.csv` with the required columns.
-2. Run `streamlit run app.py`.
+1. Confirm that `data/raw/verified_events.csv` is included in the repository. If updating the file, keep the required columns unchanged.
+2. Run `py -m streamlit run app.py`.
 3. In the sidebar, set Data Mode to `Historical Validation Mode`.
 4. If needed, check `Refresh FRED historical price cache` to fetch fresh FRED historical prices.
 5. If `verified_events.csv` changed, check `Rebuild event-window results`.
@@ -252,7 +254,7 @@ streamlit run app.py
 After adding or updating `data/raw/verified_events.csv`, regenerate the processed event-window file with:
 
 ```powershell
-python -c "from src.event_study import build_event_window_results; build_event_window_results(refresh_prices=True)"
+py -c "from src.event_study import build_event_window_results; build_event_window_results(refresh_prices=True)"
 ```
 
 This fetches or refreshes historical FRED prices, aligns verified events to available price dates, calculates event-window returns, and saves:
@@ -266,7 +268,7 @@ data/processed/event_window_results.csv
 Open the notebook with:
 
 ```powershell
-jupyter notebook notebooks/oil_market_intelligence_analysis.ipynb
+py -m notebook notebooks/oil_market_intelligence_analysis.ipynb
 ```
 
 The notebook is organized into:
@@ -325,7 +327,7 @@ The sample-mode market brief generator combines the latest engineered price feat
 - This is a portfolio MVP, not a production SaaS product.
 - The dashboard does not include authentication, a backend API service, cloud deployment, a database, scheduled jobs, or real-time news ingestion.
 - Sample prices and sample events are demo data only.
-- Historical validation depends on a user-provided verified event file.
+- Historical validation depends on the quality and completeness of the curated verified event file.
 - Event-window analysis is descriptive and does not prove causality.
 - The brief is template-based and should not be interpreted as investment advice.
 
@@ -342,11 +344,3 @@ Potential future improvements include:
 - Cloud deployment
 - Alerting system
 - User authentication
-
-## Resume Bullet Mapping
-
-- Built a local Streamlit analytics dashboard with separate sample-demo and historical-validation modes for crude oil market analysis.
-- Engineered crude oil market features in Python including returns, moving averages, price changes, volatility, and Brent-WTI spread.
-- Created a rule-based event classification workflow for commodity market risk drivers.
-- Implemented descriptive event-window analysis around verified historical oil-market events using FRED WTI and Brent prices.
-- Designed a template-based AI-assisted market brief generator to summarize price action and event context without claiming a trained trading model.
